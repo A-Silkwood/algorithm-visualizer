@@ -2,26 +2,46 @@ import { useRef, useEffect, useState } from 'react'
 import { STATES } from './constants'
 
 type CanvasProps = {
-    width?: number
-    height?: number
-    cellSize?: number
-    selection?: string
+    width: number
+    height: number
+    cellSize: number
+    cells: string[][]
+    setCells: React.Dispatch<React.SetStateAction<string[][]>>
+    selection: string
+    startPos: { x: number; y: number } | null
+    setStartPos: React.Dispatch<
+        React.SetStateAction<{ x: number; y: number } | null>
+    >
+    prevStartState: string
+    setPrevStartState: React.Dispatch<React.SetStateAction<string>>
+    goalPos: { x: number; y: number } | null
+    setGoalPos: React.Dispatch<
+        React.SetStateAction<{ x: number; y: number } | null>
+    >
+    prevGoalState: string
+    setPrevGoalState: React.Dispatch<React.SetStateAction<string>>
 }
 
 function Canvas({
-    width = 50,
-    height = 50,
-    cellSize = 16,
-    selection = STATES.WALL,
+    cells,
+    setCells,
+    selection,
+    width,
+    height,
+    cellSize,
+    startPos,
+    setStartPos,
+    prevStartState,
+    setPrevStartState,
+    goalPos,
+    setGoalPos,
+    prevGoalState,
+    setPrevGoalState,
 }: CanvasProps) {
     // canvas element
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
     // selection state
-    const [isSelecting, setIsSelecting] = useState(false)
-    // cell states
-    const [cells, setCells] = useState<string[][]>(
-        Array.from({ length: height }, () => Array(width).fill(STATES.EMPTY))
-    )
+    const [isSelecting, setIsSelecting] = useState<boolean>(false)
 
     // update cells
     useEffect(() => {
@@ -63,22 +83,48 @@ function Canvas({
         return x < 0 || y < 0 || x >= width || y >= height ? null : { x, y }
     }
 
+    // update cell with current selection
     const updateCell = (x: number, y: number) => {
+        // skip cells that are already the current selection
         if (cells[y][x] === selection) {
             return
         }
 
-        setCells(
-            cells.map((row, r) => {
-                if (r === y) {
-                    return row.map((cell, c) => {
-                        return c === x ? selection : cell
-                    })
-                } else {
-                    return [...row]
-                }
-            })
-        )
+        // copy cells' state
+        let nextCells = cells.map((row) => {
+            return [...row]
+        })
+
+        // special cases for start and goal positions
+        if (selection === STATES.START) {
+            // prevent multiple start positions
+            if (startPos) {
+                nextCells[startPos.y][startPos.x] = prevStartState
+            }
+            setStartPos({ x: x, y: y })
+            if (cells[y][x] !== STATES.GOAL) {
+                setPrevStartState(cells[y][x])
+            } else {
+                setPrevStartState(prevGoalState)
+                setGoalPos(null)
+            }
+        } else if (selection === STATES.GOAL) {
+            // prevent multiple goal positions
+            if (goalPos) {
+                nextCells[goalPos.y][goalPos.x] = prevGoalState
+            }
+            setGoalPos({ x: x, y: y })
+            if (cells[y][x] !== STATES.START) {
+                setPrevGoalState(cells[y][x])
+            } else {
+                setPrevGoalState(prevStartState)
+                setStartPos(null)
+            }
+        }
+
+        // update current coordinate
+        nextCells[y][x] = selection
+        setCells(nextCells)
     }
 
     // mouse click pressed
