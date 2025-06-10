@@ -1,5 +1,5 @@
 import { type IconProps } from '@phosphor-icons/react'
-import { IconPos, type IconWeight } from '@/components/Input/Button/constants'
+import { IconPos, type IconWeight } from './constants'
 
 type IconComponent = React.ForwardRefExoticComponent<
     IconProps & React.RefAttributes<SVGSVGElement>
@@ -8,15 +8,17 @@ type IconComponent = React.ForwardRefExoticComponent<
 type ButtonProps = {
     text?: string
     btnClass?: string
+    bgClassOverride?: string
     icon?: IconComponent
     iconSize?: number
     iconWeight?: IconWeight
     iconPos?: IconPos
 } & React.ButtonHTMLAttributes<HTMLButtonElement>
 
-function Button({
+export default function Button({
     text,
     btnClass,
+    bgClassOverride,
     icon: Icon,
     iconSize,
     iconWeight = 'regular',
@@ -27,7 +29,7 @@ function Button({
         <>
             <button
                 {...btnAttrs}
-                className={`flex flex-row gap-2 items-center rounded p-2 bg-blue-100 hover:bg-blue-200 active:bg-blue-400 disabled:bg-gray-300 ${btnClass}`}
+                className={`flex flex-row gap-2 items-center rounded p-1 m-0.5 text-md shadow ${bgClassOverride ?? 'bg-blue-100 hover:bg-blue-200 active:bg-blue-400 disabled:bg-gray-300'} ${btnClass}`}
             >
                 {Icon &&
                     (!iconPos ||
@@ -44,5 +46,3 @@ function Button({
         </>
     )
 }
-
-export default Button
