@@ -22,7 +22,7 @@ type CanvasProps = {
     setPrevGoalState: React.Dispatch<React.SetStateAction<string>>
 }
 
-function Canvas({
+export default function Canvas({
     cells,
     setCells,
     selection,
@@ -166,5 +166,3 @@ function Canvas({
         </>
     )
 }
-
-export default Canvas

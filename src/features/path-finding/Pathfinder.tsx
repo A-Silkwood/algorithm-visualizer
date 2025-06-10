@@ -1,11 +1,11 @@
-import { /*useRef, useEffect,*/ useState } from 'react'
+import { useState } from 'react'
 import Canvas from './Canvas'
 import Panel from './Panel'
 import { STATES } from './constants'
 
 type PathfinderProps = {}
 
-function Pathfinder({}: PathfinderProps) {
+export default function Pathfinder({}: PathfinderProps) {
     const width = 10
     const height = 10
     const cellSize = 80
@@ -48,6 +48,7 @@ function Pathfinder({}: PathfinderProps) {
             <div className="flex flex-col items-center gap-2">
                 <div>
                     <Panel
+                        selection={selection}
                         setSelection={setSelection}
                         isRunning={isRunning}
                         setIsRunning={setIsRunning}
@@ -76,5 +77,3 @@ function Pathfinder({}: PathfinderProps) {
         </>
     )
 }
-
-export default Pathfinder

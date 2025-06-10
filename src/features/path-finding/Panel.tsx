@@ -1,5 +1,5 @@
-// import { useRef, useEffect, useState } from 'react'
-import Button from '@/components/Input/Button/Button'
+import Button from '@/components/inputs/button/Button'
+import Dropdown from '@/components/inputs/dropdown/Dropdown'
 import {
     WallIcon,
     EraserIcon,
@@ -13,13 +13,20 @@ import {
 import { STATES } from './constants'
 
 type PanelProps = {
+    selection: string
     setSelection: React.Dispatch<React.SetStateAction<string>>
     isRunning: boolean
     setIsRunning: React.Dispatch<React.SetStateAction<boolean>>
     onReset: () => void
 }
 
-function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
+export default function Panel({
+    selection,
+    setSelection,
+    isRunning,
+    setIsRunning,
+    onReset,
+}: PanelProps) {
     return (
         <>
             <div className="rounded-xl shadow bg-white w-min">
@@ -32,6 +39,12 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Place Walls"
                             icon={WallIcon}
                             iconWeight="fill"
+                            iconSize={40}
+                            bgClassOverride={
+                                selection === STATES.WALL
+                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
+                                    : undefined
+                            }
                             onClick={() => setSelection(STATES.WALL)}
                             disabled={isRunning}
                         />
@@ -41,6 +54,12 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Eraser"
                             icon={EraserIcon}
                             iconWeight="duotone"
+                            iconSize={40}
+                            bgClassOverride={
+                                selection === STATES.EMPTY
+                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
+                                    : undefined
+                            }
                             onClick={() => setSelection(STATES.EMPTY)}
                             disabled={isRunning}
                         />
@@ -50,7 +69,13 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Place Start Position"
                             icon={FlagIcon}
                             iconWeight="fill"
+                            iconSize={40}
                             btnClass="text-emerald-400"
+                            bgClassOverride={
+                                selection === STATES.START
+                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
+                                    : undefined
+                            }
                             onClick={() => setSelection(STATES.START)}
                             disabled={isRunning}
                         />
@@ -60,7 +85,13 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Place Goal"
                             icon={FlagIcon}
                             iconWeight="fill"
+                            iconSize={40}
                             btnClass="text-red-400"
+                            bgClassOverride={
+                                selection === STATES.GOAL
+                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
+                                    : undefined
+                            }
                             onClick={() => setSelection(STATES.GOAL)}
                             disabled={isRunning}
                         />
@@ -70,6 +101,7 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Reset Board"
                             icon={ArrowsCounterClockwiseIcon}
                             iconWeight="regular"
+                            iconSize={40}
                             disabled={isRunning}
                             onClick={onReset}
                         />
@@ -79,7 +111,22 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Create Maze"
                             icon={BlueprintIcon}
                             iconWeight="regular"
+                            iconSize={40}
                             disabled
+                        />
+                    </div>
+                    <div>
+                        <Dropdown
+                            title="Algorithm"
+                            placeholder="Select an algorithm"
+                            options={[
+                                'Depth-First Search',
+                                'Breadth-First Search',
+                                "Dijkstra's Algorithm",
+                                'A* Search',
+                            ]}
+                            defaultOption="Dijkstra's Algorithm"
+                            disabled={isRunning}
                         />
                     </div>
                     <div>
@@ -87,6 +134,7 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Run"
                             icon={isRunning ? PauseIcon : PlayIcon}
                             iconWeight="fill"
+                            iconSize={40}
                             btnClass={
                                 isRunning
                                     ? 'text-amber-400'
@@ -100,6 +148,7 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
                             title="Stop"
                             icon={StopIcon}
                             iconWeight="fill"
+                            iconSize={40}
                             disabled
                         />
                     </div>
@@ -108,5 +157,3 @@ function Panel({ setSelection, isRunning, setIsRunning, onReset }: PanelProps) {
         </>
     )
 }
-
-export default Panel
