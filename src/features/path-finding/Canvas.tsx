@@ -91,7 +91,7 @@ export default function Canvas({
         }
 
         // copy cells' state
-        let nextCells = cells.map((row) => {
+        const nextCells = cells.map((row) => {
             return [...row]
         })
 
@@ -120,6 +120,10 @@ export default function Canvas({
                 setPrevGoalState(prevStartState)
                 setStartPos(null)
             }
+        } else if (startPos && x === startPos.x && y === startPos.y) {
+            setStartPos(null)
+        } else if (goalPos && x === goalPos.x && y === goalPos.y) {
+            setGoalPos(null)
         }
 
         // update current coordinate
@@ -150,8 +154,16 @@ export default function Canvas({
         }
     }
 
-    // mouse click released
-    const handleMouseUp = () => setIsSelecting(false)
+    // mouse click released; this way includes mouse release outside component
+    useEffect(() => {
+        function handleMouseUpOutside() {
+            setIsSelecting(false)
+        }
+
+        document.addEventListener('mouseup', handleMouseUpOutside)
+        return () =>
+            document.removeEventListener('mouseup', handleMouseUpOutside)
+    }, [])
 
     return (
         <>
@@ -160,7 +172,6 @@ export default function Canvas({
                 width={width * cellSize}
                 height={height * cellSize}
                 onMouseDown={handleMouseDown}
-                onMouseUp={handleMouseUp}
                 onMouseMove={handleMouseMove}
             />
         </>
