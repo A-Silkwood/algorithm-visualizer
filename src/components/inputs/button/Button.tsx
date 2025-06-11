@@ -29,7 +29,7 @@ export default function Button({
         <>
             <button
                 {...btnAttrs}
-                className={`flex flex-row gap-2 items-center rounded p-1 m-0.5 text-md shadow ${bgClassOverride ?? 'bg-blue-100 hover:bg-blue-200 active:bg-blue-400 disabled:bg-gray-300'} ${btnClass}`}
+                className={`flex flex-row gap-2 items-center rounded p-1 m-0.5 text-md ${bgClassOverride ?? 'bg-blue-100 hover:bg-blue-200 active:bg-blue-400 disabled:bg-gray-300'} ${btnClass}`}
             >
                 {Icon &&
                     (!iconPos ||
