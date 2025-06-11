@@ -3,6 +3,8 @@ import Button from '@/components/inputs/button/Button'
 import { XIcon } from '@phosphor-icons/react'
 
 type DropdownProps = {
+    value?: string | null
+    onChange: (option: string | null) => void
     options?: string[]
     defaultOption?: string
     title?: string
@@ -15,8 +17,9 @@ type DropdownProps = {
 }
 
 export default function Dropdown({
+    value = null,
+    onChange,
     options = [],
-    defaultOption,
     title,
     titleClass = '',
     mainClass = '',
@@ -29,9 +32,6 @@ export default function Dropdown({
     const isDisabledRef = useRef<boolean>(disabled)
     const [isOpen, setIsOpen] = useState<boolean>(false)
     const [highlightIndex, setHighlightIndex] = useState<number>(0)
-    const [selection, setSelection] = useState<string | null>(
-        defaultOption && options.includes(defaultOption) ? defaultOption : null
-    )
 
     // close on click outside component
     useEffect(() => {
@@ -80,7 +80,7 @@ export default function Dropdown({
                 )
                 break
             case 'Enter':
-                setSelection(options[highlightIndex])
+                onChange(options[highlightIndex])
                 setIsOpen(false)
                 break
             case 'Escape':
@@ -106,16 +106,16 @@ export default function Dropdown({
                     onKeyDown={handleKeyDown}
                 >
                     <div
-                        className={`flex flex-row justify-between p-1 ${disabled ? 'bg-gray-300' : 'bg-blue-100 hover:bg-blue-200'}  ${isOpen ? 'rounded-t bg-white' : 'rounded'} shadow`}
+                        className={`flex flex-row justify-between p-1 ${disabled ? 'bg-gray-300' : 'bg-blue-100 hover:bg-blue-200'}  ${isOpen ? 'rounded-t bg-gray-300' : 'rounded'} shadow`}
                     >
                         <button
-                            className={`w-full text-left ${selection ? 'text-black' : 'text-slate-500'} ${mainClass}`}
+                            className={`w-full text-left ${value ? 'text-black' : 'text-slate-500'} ${mainClass}`}
                             onClick={() => {
                                 setIsOpen(options.length > 0 ? !isOpen : false)
                             }}
                             disabled={disabled}
                         >
-                            {selection ||
+                            {value ||
                                 (placeholder
                                     ? placeholder
                                     : 'Select an option')}
@@ -124,8 +124,8 @@ export default function Dropdown({
                             <Button
                                 icon={XIcon}
                                 btnClass="rounded-full shadow"
-                                bgClassOverride="bg-white hover:bg-blue-300 active:bg-blue-400 disabled:bg-gray-200"
-                                onClick={() => setSelection(null)}
+                                bgClassOverride="bg-gray-300 hover:bg-blue-300 active:bg-blue-400 disabled:bg-gray-200"
+                                onClick={() => onChange(null)}
                                 disabled={disabled}
                             />
                         )}
@@ -136,12 +136,12 @@ export default function Dropdown({
                                 return (
                                     <li
                                         key={option}
-                                        className={`p-0.5 cursor-pointer ${ix === highlightIndex ? 'bg-blue-200' : ''} ${option === selection ? 'bg-blue-400 hover:bg-blue-500' : ''} ${dropdownClass}`}
+                                        className={`p-0.5 cursor-pointer ${ix === highlightIndex ? 'bg-blue-200' : ''} ${option === value ? 'bg-blue-400 hover:bg-blue-500' : ''} ${dropdownClass}`}
                                         onMouseEnter={() =>
                                             setHighlightIndex(ix)
                                         }
                                         onClick={() => {
-                                            setSelection(option)
+                                            onChange(option)
                                             setIsOpen(false)
                                         }}
                                     >
