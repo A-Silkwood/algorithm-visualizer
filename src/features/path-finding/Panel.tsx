@@ -13,19 +13,25 @@ import {
 import { STATES } from './constants'
 
 type PanelProps = {
-    selection: string
-    setSelection: React.Dispatch<React.SetStateAction<string>>
+    stateSelection: string
+    setStateSelection: React.Dispatch<React.SetStateAction<string>>
+    algorithmSelection: string | null
+    setAlgorithmSelection: React.Dispatch<React.SetStateAction<string | null>>
     isRunning: boolean
     setIsRunning: React.Dispatch<React.SetStateAction<boolean>>
     onReset: () => void
+    onStop: () => void
 }
 
 export default function Panel({
-    selection,
-    setSelection,
+    stateSelection,
+    setStateSelection,
+    algorithmSelection,
+    setAlgorithmSelection,
     isRunning,
     setIsRunning,
     onReset,
+    onStop,
 }: PanelProps) {
     return (
         <>
@@ -33,19 +39,19 @@ export default function Panel({
                 <div className="flex justify-center items-center font-bold text-slate-800 py-1">
                     <h2>Tool Panel</h2>
                 </div>
-                <div className="flex flex-row gap-1 justify-center p-2 pt-0">
+                <div className="flex flex-row justify-center p-2 pt-0">
                     <div>
                         <Button
                             title="Place Walls"
                             icon={WallIcon}
                             iconWeight="fill"
-                            iconSize={40}
-                            bgClassOverride={
-                                selection === STATES.WALL
-                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
-                                    : undefined
+                            iconSize={32}
+                            btnClass={
+                                stateSelection === STATES.WALL
+                                    ? 'border-4 border-blue-600 disabled:border-gray-300'
+                                    : 'border-4 border-blue-100 disabled:border-gray-300'
                             }
-                            onClick={() => setSelection(STATES.WALL)}
+                            onClick={() => setStateSelection(STATES.WALL)}
                             disabled={isRunning}
                         />
                     </div>
@@ -54,13 +60,13 @@ export default function Panel({
                             title="Eraser"
                             icon={EraserIcon}
                             iconWeight="duotone"
-                            iconSize={40}
-                            bgClassOverride={
-                                selection === STATES.EMPTY
-                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
-                                    : undefined
+                            iconSize={32}
+                            btnClass={
+                                stateSelection === STATES.EMPTY
+                                    ? 'border-4 border-blue-600 disabled:border-gray-300'
+                                    : 'border-4 border-blue-100 disabled:border-gray-300'
                             }
-                            onClick={() => setSelection(STATES.EMPTY)}
+                            onClick={() => setStateSelection(STATES.EMPTY)}
                             disabled={isRunning}
                         />
                     </div>
@@ -69,14 +75,13 @@ export default function Panel({
                             title="Place Start Position"
                             icon={FlagIcon}
                             iconWeight="fill"
-                            iconSize={40}
-                            btnClass="text-emerald-400"
-                            bgClassOverride={
-                                selection === STATES.START
-                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
-                                    : undefined
+                            iconSize={32}
+                            btnClass={
+                                stateSelection === STATES.START
+                                    ? 'border-4 border-blue-600 disabled:border-gray-300 text-emerald-400'
+                                    : 'border-4 border-blue-100 disabled:border-gray-300 text-emerald-400'
                             }
-                            onClick={() => setSelection(STATES.START)}
+                            onClick={() => setStateSelection(STATES.START)}
                             disabled={isRunning}
                         />
                     </div>
@@ -85,14 +90,13 @@ export default function Panel({
                             title="Place Goal"
                             icon={FlagIcon}
                             iconWeight="fill"
-                            iconSize={40}
-                            btnClass="text-red-400"
-                            bgClassOverride={
-                                selection === STATES.GOAL
-                                    ? 'bg-amber-200 hover:bg-amber-300 active:bg-amber-400 disabled:bg-gray-300'
-                                    : undefined
+                            iconSize={32}
+                            btnClass={
+                                stateSelection === STATES.GOAL
+                                    ? 'border-4 border-blue-600 disabled:border-gray-300 text-red-400'
+                                    : 'border-4 border-blue-100 disabled:border-gray-300 text-red-400'
                             }
-                            onClick={() => setSelection(STATES.GOAL)}
+                            onClick={() => setStateSelection(STATES.GOAL)}
                             disabled={isRunning}
                         />
                     </div>
@@ -101,7 +105,8 @@ export default function Panel({
                             title="Reset Board"
                             icon={ArrowsCounterClockwiseIcon}
                             iconWeight="regular"
-                            iconSize={40}
+                            iconSize={32}
+                            btnClass="border-4 border-blue-100 disabled:border-gray-300"
                             disabled={isRunning}
                             onClick={onReset}
                         />
@@ -111,7 +116,8 @@ export default function Panel({
                             title="Create Maze"
                             icon={BlueprintIcon}
                             iconWeight="regular"
-                            iconSize={40}
+                            iconSize={32}
+                            btnClass="border-4 border-blue-100 disabled:border-gray-300"
                             disabled
                         />
                     </div>
@@ -120,12 +126,13 @@ export default function Panel({
                             title="Algorithm"
                             placeholder="Select an algorithm"
                             options={[
-                                'Depth-First Search',
                                 'Breadth-First Search',
+                                'Depth-First Search',
                                 "Dijkstra's Algorithm",
                                 'A* Search',
                             ]}
-                            defaultOption="Dijkstra's Algorithm"
+                            value={algorithmSelection}
+                            onChange={setAlgorithmSelection}
                             disabled={isRunning}
                         />
                     </div>
@@ -134,11 +141,11 @@ export default function Panel({
                             title="Run"
                             icon={isRunning ? PauseIcon : PlayIcon}
                             iconWeight="fill"
-                            iconSize={40}
+                            iconSize={32}
                             btnClass={
                                 isRunning
-                                    ? 'text-amber-400'
-                                    : 'text-emerald-400'
+                                    ? 'text-amber-400 border-4 border-blue-100 disabled:border-gray-300'
+                                    : 'text-emerald-400 border-4 border-blue-100 disabled:border-gray-300'
                             }
                             onClick={() => setIsRunning(!isRunning)}
                         />
@@ -148,7 +155,9 @@ export default function Panel({
                             title="Stop"
                             icon={StopIcon}
                             iconWeight="fill"
-                            iconSize={40}
+                            iconSize={32}
+                            btnClass="border-4 border-blue-100 disabled:border-gray-300"
+                            onClick={onStop}
                             disabled
                         />
                     </div>
