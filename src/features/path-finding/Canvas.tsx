@@ -5,8 +5,7 @@ type CanvasProps = {
     width: number
     height: number
     cellSize: number
-    cells: string[][]
-    setCells: React.Dispatch<React.SetStateAction<string[][]>>
+    cells: React.RefObject<string[][]>
     selection: string
     startPos: { x: number; y: number } | null
     setStartPos: React.Dispatch<
@@ -24,7 +23,6 @@ type CanvasProps = {
 
 export default function Canvas({
     cells,
-    setCells,
     selection,
     width,
     height,
@@ -56,14 +54,25 @@ export default function Canvas({
         }
 
         // draw each cell in grid
-        for (let y = 0; y < height; y++) {
-            for (let x = 0; x < width; x++) {
-                ctx.fillStyle = cells[y][x]
-                ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
-                ctx.strokeStyle = 'lightgray'
-                ctx.strokeRect(x * cellSize, y * cellSize, cellSize, cellSize)
+        const draw = () => {
+            for (let y = 0; y < height; y++) {
+                for (let x = 0; x < width; x++) {
+                    ctx.fillStyle = cells.current[y][x]
+                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
+                    ctx.strokeStyle = 'lightgray'
+                    ctx.strokeRect(
+                        x * cellSize,
+                        y * cellSize,
+                        cellSize,
+                        cellSize
+                    )
+                }
             }
+
+            requestAnimationFrame(draw)
         }
+
+        draw()
     })
 
     // MOUSE FUNCTIONS
@@ -86,24 +95,19 @@ export default function Canvas({
     // update cell with current selection
     const updateCell = (x: number, y: number) => {
         // skip cells that are already the current selection
-        if (cells[y][x] === selection) {
+        if (cells.current[y][x] === selection) {
             return
         }
-
-        // copy cells' state
-        const nextCells = cells.map((row) => {
-            return [...row]
-        })
 
         // special cases for start and goal positions
         if (selection === STATES.START) {
             // prevent multiple start positions
             if (startPos) {
-                nextCells[startPos.y][startPos.x] = prevStartState
+                cells.current[startPos.y][startPos.x] = prevStartState
             }
             setStartPos({ x: x, y: y })
-            if (cells[y][x] !== STATES.GOAL) {
-                setPrevStartState(cells[y][x])
+            if (cells.current[y][x] !== STATES.GOAL) {
+                setPrevStartState(cells.current[y][x])
             } else {
                 setPrevStartState(prevGoalState)
                 setGoalPos(null)
@@ -111,11 +115,11 @@ export default function Canvas({
         } else if (selection === STATES.GOAL) {
             // prevent multiple goal positions
             if (goalPos) {
-                nextCells[goalPos.y][goalPos.x] = prevGoalState
+                cells.current[goalPos.y][goalPos.x] = prevGoalState
             }
             setGoalPos({ x: x, y: y })
-            if (cells[y][x] !== STATES.START) {
-                setPrevGoalState(cells[y][x])
+            if (cells.current[y][x] !== STATES.START) {
+                setPrevGoalState(cells.current[y][x])
             } else {
                 setPrevGoalState(prevStartState)
                 setStartPos(null)
@@ -127,8 +131,7 @@ export default function Canvas({
         }
 
         // update current coordinate
-        nextCells[y][x] = selection
-        setCells(nextCells)
+        cells.current[y][x] = selection
     }
 
     // mouse click pressed
