@@ -10,16 +10,17 @@ import {
     StopIcon,
     ArrowsCounterClockwiseIcon,
 } from '@phosphor-icons/react'
-import { STATES } from './constants'
+import { RUN_STATE, STATES } from './constants'
 
 type PanelProps = {
     stateSelection: string
     setStateSelection: React.Dispatch<React.SetStateAction<string>>
     algorithmSelection: string | null
     setAlgorithmSelection: React.Dispatch<React.SetStateAction<string | null>>
-    isRunning: boolean
-    setIsRunning: React.Dispatch<React.SetStateAction<boolean>>
+    runState: string
     onReset: () => void
+    onPlay: () => void
+    onPause: () => void
     onStop: () => void
 }
 
@@ -28,9 +29,10 @@ export default function Panel({
     setStateSelection,
     algorithmSelection,
     setAlgorithmSelection,
-    isRunning,
-    setIsRunning,
+    runState,
     onReset,
+    onPlay,
+    onPause,
     onStop,
 }: PanelProps) {
     return (
@@ -52,7 +54,7 @@ export default function Panel({
                                     : 'border-4 border-blue-100 disabled:border-gray-300'
                             }
                             onClick={() => setStateSelection(STATES.WALL)}
-                            disabled={isRunning}
+                            disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
                     <div>
@@ -67,7 +69,7 @@ export default function Panel({
                                     : 'border-4 border-blue-100 disabled:border-gray-300'
                             }
                             onClick={() => setStateSelection(STATES.EMPTY)}
-                            disabled={isRunning}
+                            disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
                     <div>
@@ -82,7 +84,7 @@ export default function Panel({
                                     : 'border-4 border-blue-100 disabled:border-gray-300 text-emerald-400'
                             }
                             onClick={() => setStateSelection(STATES.START)}
-                            disabled={isRunning}
+                            disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
                     <div>
@@ -97,7 +99,7 @@ export default function Panel({
                                     : 'border-4 border-blue-100 disabled:border-gray-300 text-red-400'
                             }
                             onClick={() => setStateSelection(STATES.GOAL)}
-                            disabled={isRunning}
+                            disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
                     <div>
@@ -107,7 +109,7 @@ export default function Panel({
                             iconWeight="regular"
                             iconSize={32}
                             btnClass="border-4 border-blue-100 disabled:border-gray-300"
-                            disabled={isRunning}
+                            disabled={runState === RUN_STATE.STARTED}
                             onClick={onReset}
                         />
                     </div>
@@ -118,7 +120,7 @@ export default function Panel({
                             iconWeight="regular"
                             iconSize={32}
                             btnClass="border-4 border-blue-100 disabled:border-gray-300"
-                            disabled
+                            disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
                     <div>
@@ -133,21 +135,33 @@ export default function Panel({
                             ]}
                             value={algorithmSelection}
                             onChange={setAlgorithmSelection}
-                            disabled={isRunning}
+                            disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
                     <div>
                         <Button
-                            title="Run"
-                            icon={isRunning ? PauseIcon : PlayIcon}
+                            title={
+                                runState === RUN_STATE.STARTED ? 'Pause' : 'Run'
+                            }
+                            icon={
+                                runState === RUN_STATE.STARTED
+                                    ? PauseIcon
+                                    : PlayIcon
+                            }
                             iconWeight="fill"
                             iconSize={32}
                             btnClass={
-                                isRunning
-                                    ? 'text-amber-400 border-4 border-blue-100 disabled:border-gray-300'
-                                    : 'text-emerald-400 border-4 border-blue-100 disabled:border-gray-300'
+                                runState === RUN_STATE.STARTED
+                                    ? 'text-amber-500 border-4 border-blue-100 disabled:border-gray-300'
+                                    : 'text-emerald-500 border-4 border-blue-100 disabled:border-gray-300'
                             }
-                            onClick={() => setIsRunning(!isRunning)}
+                            onClick={() => {
+                                if (runState === RUN_STATE.STARTED) {
+                                    onPause()
+                                } else {
+                                    onPlay()
+                                }
+                            }}
                         />
                     </div>
                     <div>
@@ -156,9 +170,9 @@ export default function Panel({
                             icon={StopIcon}
                             iconWeight="fill"
                             iconSize={32}
-                            btnClass="border-4 border-blue-100 disabled:border-gray-300"
+                            btnClass="border-4 border-blue-100 disabled:border-gray-300 text-red-500"
                             onClick={onStop}
-                            disabled
+                            disabled={runState === RUN_STATE.NONE}
                         />
                     </div>
                 </div>
