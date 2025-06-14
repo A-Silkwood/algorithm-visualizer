@@ -27,11 +27,11 @@ export default function Pathfinder() {
     // interval reference
     const intervalRef = useRef<NodeJS.Timeout | null>(null)
     // list of nodes to check next: BFS
-    let queue: Array<Node> | null = null
+    const queue = useRef<Array<Node> | null>(null)
     // list of nodes to check next: BFS
-    let visited: Array<Node> | null = null
+    const visited = useRef<Array<Node> | null>(null)
     // current node being checked
-    let node: Node | null = null
+    const node = useRef<Node | null>(null)
 
     // Panel Variables
     // current cell state for the user to place
@@ -101,9 +101,9 @@ export default function Pathfinder() {
 
         // reset if previous run was finished
         if (runState === RUN_STATE.FINISHED) {
-            queue = null
-            visited = null
-            node = null
+            queue.current = null
+            visited.current = null
+            node.current = null
             resetGrid()
             setRunState(RUN_STATE.NONE)
         }
@@ -164,7 +164,7 @@ export default function Pathfinder() {
     // check if cell has not been visited or in queue, within bounds, and not a wall
     function isValidNeighbor(x: number, y: number): boolean {
         // this should never run if there is no bugs
-        if (!visited || !queue) {
+        if (!visited.current || !queue.current) {
             //TODO ERROR
             return false
         }
@@ -175,8 +175,8 @@ export default function Pathfinder() {
             y >= 0 &&
             y < height &&
             cells.current[y][x] !== STATES.WALL &&
-            !visited!.some((n) => n.x === x && n.y === y) &&
-            !queue!.some((n) => n.x === x && n.y === y)
+            !visited.current!.some((n) => n.x === x && n.y === y) &&
+            !queue.current!.some((n) => n.x === x && n.y === y)
         )
     }
 
@@ -189,44 +189,44 @@ export default function Pathfinder() {
         }
 
         // initialize graph
-        if (!queue || !visited) {
-            queue = [
+        if (!queue.current || !visited.current) {
+            queue.current = [
                 {
                     x: startPos.x,
                     y: startPos.y,
                     parent: null,
                 },
             ]
-            visited = []
+            visited.current = []
         }
 
         // next node in queue
-        if (queue.length > 0) {
+        if (queue.current.length > 0) {
             // reset last node
-            if (node) {
+            if (node.current) {
                 // mark last node's path as searched
-                let n: Node | null = node
+                let n: Node | null = node.current
                 while (n) {
                     cells.current[n.y][n.x] = STATES.SEARCHED
                     n = n.parent
                 }
                 // mark node as visited
-                visited.push(node)
+                visited.current.push(node.current)
             }
 
             // setup next node in queue
-            node = queue.shift() ?? null // '?? null' is purely for ts and shouldn't run
+            node.current = queue.current.shift() ?? null // '?? null' is purely for ts and shouldn't run
             // mark current path to node; marks as found if current node is the goal
-            if (node) {
+            if (node.current) {
                 const state =
-                    node.x === goalPos.x && node.y === goalPos.y
+                    node.current.x === goalPos.x && node.current.y === goalPos.y
                         ? STATES.FOUND
                         : STATES.PATH
-                cells.current[node.y][node.x] =
+                cells.current[node.current.y][node.current.x] =
                     state === STATES.FOUND
                         ? STATES.FOUND
                         : STATES.PATH_SEARCHING
-                let n = node.parent
+                let n = node.current.parent
                 while (n) {
                     cells.current[n.y][n.x] = state
                     n = n.parent
@@ -236,39 +236,42 @@ export default function Pathfinder() {
                 cells.current[goalPos.y][goalPos.x] = STATES.GOAL
 
                 // found path
-                if (node.x === goalPos.x && node.y === goalPos.y) {
+                if (
+                    node.current.x === goalPos.x &&
+                    node.current.y === goalPos.y
+                ) {
                     setRunState(RUN_STATE.FINISHED)
                     stopPathfinding()
                     return
                 }
 
                 // find non-visited neighbors
-                if (isValidNeighbor(node.x + 1, node.y)) {
-                    queue.push({
-                        x: node.x + 1,
-                        y: node.y,
-                        parent: node,
+                if (isValidNeighbor(node.current.x + 1, node.current.y)) {
+                    queue.current.push({
+                        x: node.current.x + 1,
+                        y: node.current.y,
+                        parent: node.current,
                     })
                 }
-                if (isValidNeighbor(node.x, node.y + 1)) {
-                    queue.push({
-                        x: node.x,
-                        y: node.y + 1,
-                        parent: node,
+                if (isValidNeighbor(node.current.x, node.current.y + 1)) {
+                    queue.current.push({
+                        x: node.current.x,
+                        y: node.current.y + 1,
+                        parent: node.current,
                     })
                 }
-                if (isValidNeighbor(node.x - 1, node.y)) {
-                    queue.push({
-                        x: node.x - 1,
-                        y: node.y,
-                        parent: node,
+                if (isValidNeighbor(node.current.x - 1, node.current.y)) {
+                    queue.current.push({
+                        x: node.current.x - 1,
+                        y: node.current.y,
+                        parent: node.current,
                     })
                 }
-                if (isValidNeighbor(node.x, node.y - 1)) {
-                    queue.push({
-                        x: node.x,
-                        y: node.y - 1,
-                        parent: node,
+                if (isValidNeighbor(node.current.x, node.current.y - 1)) {
+                    queue.current.push({
+                        x: node.current.x,
+                        y: node.current.y - 1,
+                        parent: node.current,
                     })
                 }
             }
@@ -289,61 +292,66 @@ export default function Pathfinder() {
         }
 
         // initialize graph
-        if (!node || !visited || !queue) {
-            node = {
+        if (!node.current || !visited.current || !queue.current) {
+            node.current = {
                 x: startPos.x,
                 y: startPos.y,
                 parent: null,
             }
-            visited = [node]
-            queue = [] // unecessary except for error with isValidNeighbor
+            visited.current = [node.current]
+            queue.current = [] // unecessary except for error with isValidNeighbor
         } else {
             // add current node to visited
-            visited.push(node)
+            visited.current.push(node.current)
 
             // find non-visited neighbors
-            if (isValidNeighbor(node.x + 1, node.y)) {
+            if (isValidNeighbor(node.current.x + 1, node.current.y)) {
                 // go right
-                cells.current[node.y][node.x] = STATES.PATH
-                node = {
-                    x: node.x + 1,
-                    y: node.y,
-                    parent: node,
+                cells.current[node.current.y][node.current.x] = STATES.PATH
+                node.current = {
+                    x: node.current.x + 1,
+                    y: node.current.y,
+                    parent: node.current,
                 }
-                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
-            } else if (isValidNeighbor(node.x, node.y + 1)) {
+                cells.current[node.current.y][node.current.x] =
+                    STATES.PATH_SEARCHING
+            } else if (isValidNeighbor(node.current.x, node.current.y + 1)) {
                 // go down
-                cells.current[node.y][node.x] = STATES.PATH
-                node = {
-                    x: node.x,
-                    y: node.y + 1,
-                    parent: node,
+                cells.current[node.current.y][node.current.x] = STATES.PATH
+                node.current = {
+                    x: node.current.x,
+                    y: node.current.y + 1,
+                    parent: node.current,
                 }
-                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
-            } else if (isValidNeighbor(node.x - 1, node.y)) {
+                cells.current[node.current.y][node.current.x] =
+                    STATES.PATH_SEARCHING
+            } else if (isValidNeighbor(node.current.x - 1, node.current.y)) {
                 // go left
-                cells.current[node.y][node.x] = STATES.PATH
-                node = {
-                    x: node.x - 1,
-                    y: node.y,
-                    parent: node,
+                cells.current[node.current.y][node.current.x] = STATES.PATH
+                node.current = {
+                    x: node.current.x - 1,
+                    y: node.current.y,
+                    parent: node.current,
                 }
-                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
-            } else if (isValidNeighbor(node.x, node.y - 1)) {
+                cells.current[node.current.y][node.current.x] =
+                    STATES.PATH_SEARCHING
+            } else if (isValidNeighbor(node.current.x, node.current.y - 1)) {
                 // go up
-                cells.current[node.y][node.x] = STATES.PATH
-                node = {
-                    x: node.x,
-                    y: node.y - 1,
-                    parent: node,
+                cells.current[node.current.y][node.current.x] = STATES.PATH
+                node.current = {
+                    x: node.current.x,
+                    y: node.current.y - 1,
+                    parent: node.current,
                 }
-                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+                cells.current[node.current.y][node.current.x] =
+                    STATES.PATH_SEARCHING
             } else {
                 // exhausted current path; start backtracking
-                cells.current[node.y][node.x] = STATES.SEARCHED
-                node = node.parent
-                if (node) {
-                    cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+                cells.current[node.current.y][node.current.x] = STATES.SEARCHED
+                node.current = node.current.parent
+                if (node.current) {
+                    cells.current[node.current.y][node.current.x] =
+                        STATES.PATH_SEARCHING
                 } else {
                     // exhausted all possible paths
                     cells.current[startPos.y][startPos.x] = STATES.START
@@ -358,7 +366,7 @@ export default function Pathfinder() {
 
             // check if we are at the goal
             // found path
-            if (node.x === goalPos.x && node.y === goalPos.y) {
+            if (node.current.x === goalPos.x && node.current.y === goalPos.y) {
                 cells.current[goalPos.y][goalPos.x] = STATES.GOAL
                 setRunState(RUN_STATE.FINISHED)
                 stopPathfinding()
