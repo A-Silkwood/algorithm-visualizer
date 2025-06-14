@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import Canvas from './Canvas'
 import Panel from './Panel'
-import { RUN_STATE, STATES } from './constants'
+import { RUN_STATE, STATES, SPEED_LABELS, SPEED_VALUES } from './constants'
 
 type Node = {
     x: number
@@ -34,12 +34,14 @@ export default function Pathfinder() {
     let node: Node | null = null
 
     // Panel Variables
-    // what state is currently selected
+    // current cell state for the user to place
     const [stateSelection, setStateSelection] = useState<string>(STATES.WALL)
-    // what state is currently selected
+    // pathfinding algorithm selected to run
     const [algorithmSelection, setAlgorithmSelection] = useState<string | null>(
-        'Breadth-First Search'
+        'Depth-First Search'
     )
+    // visualizer speed
+    const [speed, setSpeed] = useState<string | null>(SPEED_LABELS[3])
 
     // Canvas Variables
     // start position
@@ -69,6 +71,11 @@ export default function Pathfinder() {
     }
 
     const onPlay = () => {
+        if (!startPos || !goalPos) {
+            // TODO NOTIFY USER
+            return
+        }
+
         setRunState(RUN_STATE.STARTED)
         startPathfinding()
     }
@@ -86,13 +93,26 @@ export default function Pathfinder() {
     // Pathfinding Functions
     // starts pathfinding algorithm TODO create pathfinding function to use in interval
     const startPathfinding = () => {
+        // notify user to place start and goal prior to running
         if (!startPos || !goalPos) {
-            // TODO show error to place start and goal
+            // TODO show error
             return
         }
 
+        // reset if previous run was finished
+        if (runState === RUN_STATE.FINISHED) {
+            queue = null
+            visited = null
+            node = null
+            resetGrid()
+            setRunState(RUN_STATE.NONE)
+        }
+
         if (!intervalRef.current) {
-            intervalRef.current = setInterval(() => pathfindStep(), 0)
+            intervalRef.current = setInterval(
+                () => pathfindStep(),
+                SPEED_VALUES[SPEED_LABELS.findIndex((v) => v === speed)]
+            )
         }
     }
 
@@ -143,6 +163,7 @@ export default function Pathfinder() {
 
     // check if cell has not been visited or in queue, within bounds, and not a wall
     function isValidNeighbor(x: number, y: number): boolean {
+        // this should never run if there is no bugs
         if (!visited || !queue) {
             //TODO ERROR
             return false
@@ -259,7 +280,92 @@ export default function Pathfinder() {
         }
     }
 
-    function dfsStep() {}
+    // performs next step of depth-first search
+    function dfsStep() {
+        // this should never run if there is no bugs
+        if (!startPos || !goalPos) {
+            // TODO ERROR
+            return
+        }
+
+        // initialize graph
+        if (!node || !visited || !queue) {
+            node = {
+                x: startPos.x,
+                y: startPos.y,
+                parent: null,
+            }
+            visited = [node]
+            queue = [] // unecessary except for error with isValidNeighbor
+        } else {
+            // add current node to visited
+            visited.push(node)
+
+            // find non-visited neighbors
+            if (isValidNeighbor(node.x + 1, node.y)) {
+                // go right
+                cells.current[node.y][node.x] = STATES.PATH
+                node = {
+                    x: node.x + 1,
+                    y: node.y,
+                    parent: node,
+                }
+                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+            } else if (isValidNeighbor(node.x, node.y + 1)) {
+                // go down
+                cells.current[node.y][node.x] = STATES.PATH
+                node = {
+                    x: node.x,
+                    y: node.y + 1,
+                    parent: node,
+                }
+                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+            } else if (isValidNeighbor(node.x - 1, node.y)) {
+                // go left
+                cells.current[node.y][node.x] = STATES.PATH
+                node = {
+                    x: node.x - 1,
+                    y: node.y,
+                    parent: node,
+                }
+                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+            } else if (isValidNeighbor(node.x, node.y - 1)) {
+                // go up
+                cells.current[node.y][node.x] = STATES.PATH
+                node = {
+                    x: node.x,
+                    y: node.y - 1,
+                    parent: node,
+                }
+                cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+            } else {
+                // exhausted current path; start backtracking
+                cells.current[node.y][node.x] = STATES.SEARCHED
+                node = node.parent
+                if (node) {
+                    cells.current[node.y][node.x] = STATES.PATH_SEARCHING
+                } else {
+                    // exhausted all possible paths
+                    cells.current[startPos.y][startPos.x] = STATES.START
+                    setRunState(RUN_STATE.FINISHED)
+                    stopPathfinding()
+                    return
+                }
+            }
+
+            // ensure start is not overwritten
+            cells.current[startPos.y][startPos.x] = STATES.START
+
+            // check if we are at the goal
+            // found path
+            if (node.x === goalPos.x && node.y === goalPos.y) {
+                cells.current[goalPos.y][goalPos.x] = STATES.GOAL
+                setRunState(RUN_STATE.FINISHED)
+                stopPathfinding()
+                return
+            }
+        }
+    }
 
     function dijkstraStep() {}
 
@@ -268,16 +374,14 @@ export default function Pathfinder() {
     return (
         <>
             <div className="flex flex-col items-center gap-2">
-                <div>{runState === RUN_STATE.NONE && 'NONE'}</div>
-                <div>{runState === RUN_STATE.STARTED && 'STARTED'}</div>
-                <div>{runState === RUN_STATE.PAUSED && 'PAUSED'}</div>
-                <div>{runState === RUN_STATE.FINISHED && 'FINISHED'}</div>
                 <div>
                     <Panel
                         stateSelection={stateSelection}
                         setStateSelection={setStateSelection}
                         algorithmSelection={algorithmSelection}
                         setAlgorithmSelection={setAlgorithmSelection}
+                        speed={speed}
+                        setSpeed={setSpeed}
                         runState={runState}
                         onReset={onReset}
                         onPlay={onPlay}
@@ -292,6 +396,8 @@ export default function Pathfinder() {
                         cellSize={cellSize}
                         cells={cells}
                         selection={stateSelection}
+                        runState={runState}
+                        resetGrid={resetGrid}
                         startPos={startPos}
                         setStartPos={setStartPos}
                         prevStartState={prevStartState}
