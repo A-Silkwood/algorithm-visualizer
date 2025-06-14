@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
-import { STATES } from './constants'
+import { RUN_STATE, STATES } from './constants'
 
 type CanvasProps = {
     width: number
@@ -7,6 +7,8 @@ type CanvasProps = {
     cellSize: number
     cells: React.RefObject<string[][]>
     selection: string
+    runState: string
+    resetGrid: () => void
     startPos: { x: number; y: number } | null
     setStartPos: React.Dispatch<
         React.SetStateAction<{ x: number; y: number } | null>
@@ -22,11 +24,13 @@ type CanvasProps = {
 }
 
 export default function Canvas({
-    cells,
-    selection,
     width,
     height,
     cellSize,
+    cells,
+    selection,
+    runState,
+    resetGrid,
     startPos,
     setStartPos,
     prevStartState,
@@ -94,6 +98,10 @@ export default function Canvas({
 
     // update cell with current selection
     const updateCell = (x: number, y: number) => {
+        if (runState !== RUN_STATE.NONE) {
+            resetGrid()
+        }
+
         // skip cells that are already the current selection
         if (cells.current[y][x] === selection) {
             return
