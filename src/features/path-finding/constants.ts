@@ -15,3 +15,6 @@ export const RUN_STATE = {
     PAUSED: 'PAUSED',
     FINISHED: 'FINISHED',
 }
+
+export const SPEED_LABELS = ['5x', '3x', '2x', '1x', '1/2x', '1/3x', '1/5x']
+export const SPEED_VALUES = [12, 20, 30, 60, 120, 180, 300]

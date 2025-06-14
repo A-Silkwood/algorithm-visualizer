@@ -10,13 +10,15 @@ import {
     StopIcon,
     ArrowsCounterClockwiseIcon,
 } from '@phosphor-icons/react'
-import { RUN_STATE, STATES } from './constants'
+import { RUN_STATE, SPEED_LABELS, STATES } from './constants'
 
 type PanelProps = {
     stateSelection: string
     setStateSelection: React.Dispatch<React.SetStateAction<string>>
     algorithmSelection: string | null
     setAlgorithmSelection: React.Dispatch<React.SetStateAction<string | null>>
+    speed: string | null
+    setSpeed: React.Dispatch<React.SetStateAction<string | null>>
     runState: string
     onReset: () => void
     onPlay: () => void
@@ -29,6 +31,8 @@ export default function Panel({
     setStateSelection,
     algorithmSelection,
     setAlgorithmSelection,
+    speed,
+    setSpeed,
     runState,
     onReset,
     onPlay,
@@ -135,6 +139,16 @@ export default function Panel({
                             ]}
                             value={algorithmSelection}
                             onChange={setAlgorithmSelection}
+                            disabled={runState === RUN_STATE.STARTED}
+                        />
+                    </div>
+                    <div>
+                        <Dropdown
+                            title="Speed"
+                            placeholder="Select an algorithm"
+                            options={SPEED_LABELS}
+                            value={speed}
+                            onChange={setSpeed}
                             disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
