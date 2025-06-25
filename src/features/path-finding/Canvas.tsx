@@ -44,6 +44,10 @@ export default function Canvas({
     const canvasRef = useRef<HTMLCanvasElement | null>(null)
     // selection state
     const [isSelecting, setIsSelecting] = useState<boolean>(false)
+    // last drawn cells
+    const prevCells = useRef<string[][]>(
+        Array.from({ length: height }, () => Array(width).fill(STATES.WALL))
+    )
 
     // update cells
     useEffect(() => {
@@ -61,18 +65,25 @@ export default function Canvas({
         const draw = () => {
             for (let y = 0; y < height; y++) {
                 for (let x = 0; x < width; x++) {
-                    ctx.fillStyle = cells.current[y][x]
-                    ctx.fillRect(x * cellSize, y * cellSize, cellSize, cellSize)
-                    ctx.strokeStyle = 'lightgray'
-                    ctx.strokeRect(
-                        x * cellSize,
-                        y * cellSize,
-                        cellSize,
-                        cellSize
-                    )
+                    if (cells.current[y][x] !== prevCells.current[y][x]) {
+                        ctx.fillStyle = cells.current[y][x]
+                        ctx.fillRect(
+                            x * cellSize,
+                            y * cellSize,
+                            cellSize,
+                            cellSize
+                        )
+                        ctx.strokeStyle = 'lightgray'
+                        ctx.strokeRect(
+                            x * cellSize,
+                            y * cellSize,
+                            cellSize,
+                            cellSize
+                        )
+                        prevCells.current[y][x] = cells.current[y][x]
+                    }
                 }
             }
-
             requestAnimationFrame(draw)
         }
 
@@ -98,6 +109,10 @@ export default function Canvas({
 
     // update cell with current selection
     const updateCell = (x: number, y: number) => {
+        if (runState === RUN_STATE.STARTED) {
+            return
+        }
+
         if (runState !== RUN_STATE.NONE) {
             resetGrid()
         }
