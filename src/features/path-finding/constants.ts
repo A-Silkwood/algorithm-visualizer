@@ -4,8 +4,9 @@ export const STATES = {
     GOAL: '#f0737f',
     WALL: '#2f303b',
     PATH: '#c7a2de',
-    PATH_SEARCHING: '#e8cc41',
+    PATH_SEARCHING: '#e85ff5',
     SEARCHED: '#f7e7b5',
+    QUEUED: '#f7c3b5',
     FOUND: '#73e8f0',
 }
 

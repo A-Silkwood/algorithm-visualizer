@@ -7,16 +7,17 @@ type Node = {
     x: number
     y: number
     parent: Node | null
+    cost: number | null
 }
 
 export default function Pathfinder() {
     // Canvas Settings
     // width of grid
-    const width = 10
+    const width = 40
     // height of grid
-    const height = 10
+    const height = 40
     // size of each cells width and height
-    const cellSize = 80
+    const cellSize = 20
 
     // Pathfinding Algorithm Variables
     // cell states
@@ -38,7 +39,7 @@ export default function Pathfinder() {
     const [stateSelection, setStateSelection] = useState<string>(STATES.WALL)
     // pathfinding algorithm selected to run
     const [algorithmSelection, setAlgorithmSelection] = useState<string | null>(
-        'Depth-First Search'
+        'A* Search'
     )
     // visualizer speed
     const [speed, setSpeed] = useState<string | null>(SPEED_LABELS[3])
@@ -76,7 +77,6 @@ export default function Pathfinder() {
             return
         }
 
-        setRunState(RUN_STATE.STARTED)
         startPathfinding()
     }
     const onPause = () => {
@@ -86,7 +86,6 @@ export default function Pathfinder() {
     // stops pathfinding algorithm and clears all computation that has taken place TODO
     const onStop = () => {
         resetGrid()
-        setRunState(RUN_STATE.NONE)
         stopPathfinding()
     }
 
@@ -105,9 +104,9 @@ export default function Pathfinder() {
             visited.current = null
             node.current = null
             resetGrid()
-            setRunState(RUN_STATE.NONE)
         }
 
+        setRunState(RUN_STATE.STARTED)
         if (!intervalRef.current) {
             intervalRef.current = setInterval(
                 () => pathfindStep(),
@@ -133,9 +132,6 @@ export default function Pathfinder() {
             case 'Depth-First Search':
                 dfsStep()
                 break
-            case "Dijkstra's Algorithm":
-                dijkstraStep()
-                break
             case 'A* Search':
                 aStarStep()
                 break
@@ -144,6 +140,11 @@ export default function Pathfinder() {
 
     // reset all pathfinding-only states to empty
     function resetGrid() {
+        // clear pathfinding variables
+        queue.current = null
+        visited.current = null
+        node.current = null
+
         // change all non-wall cells to empty
         for (let y = 0; y < cells.current.length; y++) {
             for (let x = 0; x < cells.current[y].length; x++) {
@@ -159,6 +160,9 @@ export default function Pathfinder() {
         if (goalPos) {
             cells.current[goalPos.y][goalPos.x] = STATES.GOAL
         }
+
+        // clear run state
+        setRunState(RUN_STATE.NONE)
     }
 
     // check if cell has not been visited or in queue, within bounds, and not a wall
@@ -195,6 +199,7 @@ export default function Pathfinder() {
                     x: startPos.x,
                     y: startPos.y,
                     parent: null,
+                    cost: null,
                 },
             ]
             visited.current = []
@@ -251,28 +256,40 @@ export default function Pathfinder() {
                         x: node.current.x + 1,
                         y: node.current.y,
                         parent: node.current,
+                        cost: null,
                     })
+                    cells.current[node.current.y][node.current.x + 1] =
+                        STATES.QUEUED
                 }
                 if (isValidNeighbor(node.current.x, node.current.y + 1)) {
                     queue.current.push({
                         x: node.current.x,
                         y: node.current.y + 1,
                         parent: node.current,
+                        cost: null,
                     })
+                    cells.current[node.current.y + 1][node.current.x] =
+                        STATES.QUEUED
                 }
                 if (isValidNeighbor(node.current.x - 1, node.current.y)) {
                     queue.current.push({
                         x: node.current.x - 1,
                         y: node.current.y,
                         parent: node.current,
+                        cost: null,
                     })
+                    cells.current[node.current.y][node.current.x - 1] =
+                        STATES.QUEUED
                 }
                 if (isValidNeighbor(node.current.x, node.current.y - 1)) {
                     queue.current.push({
                         x: node.current.x,
                         y: node.current.y - 1,
                         parent: node.current,
+                        cost: null,
                     })
+                    cells.current[node.current.y - 1][node.current.x] =
+                        STATES.QUEUED
                 }
             }
         } else {
@@ -297,6 +314,7 @@ export default function Pathfinder() {
                 x: startPos.x,
                 y: startPos.y,
                 parent: null,
+                cost: null,
             }
             visited.current = [node.current]
             queue.current = [] // unecessary except for error with isValidNeighbor
@@ -312,6 +330,7 @@ export default function Pathfinder() {
                     x: node.current.x + 1,
                     y: node.current.y,
                     parent: node.current,
+                    cost: null,
                 }
                 cells.current[node.current.y][node.current.x] =
                     STATES.PATH_SEARCHING
@@ -322,6 +341,7 @@ export default function Pathfinder() {
                     x: node.current.x,
                     y: node.current.y + 1,
                     parent: node.current,
+                    cost: null,
                 }
                 cells.current[node.current.y][node.current.x] =
                     STATES.PATH_SEARCHING
@@ -332,6 +352,7 @@ export default function Pathfinder() {
                     x: node.current.x - 1,
                     y: node.current.y,
                     parent: node.current,
+                    cost: null,
                 }
                 cells.current[node.current.y][node.current.x] =
                     STATES.PATH_SEARCHING
@@ -342,6 +363,7 @@ export default function Pathfinder() {
                     x: node.current.x,
                     y: node.current.y - 1,
                     parent: node.current,
+                    cost: null,
                 }
                 cells.current[node.current.y][node.current.x] =
                     STATES.PATH_SEARCHING
@@ -375,9 +397,213 @@ export default function Pathfinder() {
         }
     }
 
-    function dijkstraStep() {}
+    // inserts node into min heap
+    function minHeapInsert(node: Node) {
+        if (queue.current) {
+            queue.current.push(node)
 
-    function aStarStep() {}
+            // heapify up
+            let ix = queue.current.length - 1
+            while (ix > 0) {
+                const parent = Math.floor((ix - 1) / 2)
+                if (
+                    getEstimatedCost(queue.current[ix]) <=
+                    getEstimatedCost(queue.current[parent])
+                ) {
+                    minHeapSwap(ix, parent)
+                    ix = parent
+                } else {
+                    ix = 0
+                }
+            }
+        }
+    }
+
+    // gets smallest cost from min heap
+    function getMinHeapMinimum(): Node | null {
+        if (queue.current) {
+            if (queue.current.length === 0) {
+                return null
+            }
+
+            // heapify down
+            const min = queue.current[0]
+            if (queue.current.length > 1) {
+                queue.current[0] = queue.current.pop()!
+                let ix = 0
+                while (ix < queue.current.length) {
+                    const left = ix * 2 + 1
+                    const right = ix * 2 + 2
+                    let smallest = ix
+
+                    if (
+                        left < queue.current.length &&
+                        getEstimatedCost(queue.current[left]) <
+                            getEstimatedCost(queue.current[smallest])
+                    ) {
+                        smallest = left
+                    }
+                    if (
+                        right < queue.current.length &&
+                        getEstimatedCost(queue.current[right]) <
+                            getEstimatedCost(queue.current[smallest])
+                    ) {
+                        smallest = right
+                    }
+                    if (smallest !== ix) {
+                        minHeapSwap(ix, smallest)
+                        ix = smallest
+                    } else {
+                        ix = queue.current.length
+                    }
+                }
+            } else {
+                queue.current.pop()
+            }
+            return min
+        }
+
+        return null
+    }
+
+    // swap 2 values in min heap
+    function minHeapSwap(a: number, b: number) {
+        if (queue.current) {
+            const temp = queue.current[a]
+            queue.current[a] = queue.current[b]
+            queue.current[b] = temp
+        }
+    }
+
+    // return sum of heuristic and cost from start
+    function getEstimatedCost(node: Node): number {
+        if (goalPos && node.cost) {
+            const h =
+                Math.abs(goalPos.x - node.x) + Math.abs(goalPos.y - node.y)
+            return node.cost + h
+        }
+        return -1
+    }
+
+    function aStarStep() {
+        // this should never run if there is no bugs
+        if (!startPos || !goalPos) {
+            // TODO ERROR
+            return
+        }
+
+        // initialize graph
+        if (!queue.current || !visited.current) {
+            queue.current = []
+            minHeapInsert({
+                x: startPos.x,
+                y: startPos.y,
+                parent: null,
+                cost: 0,
+            })
+            visited.current = []
+        }
+
+        // next node in queue
+        if (queue.current.length > 0) {
+            // reset last node
+            if (node.current) {
+                // mark last node's path as searched
+                let n: Node | null = node.current
+                while (n) {
+                    cells.current[n.y][n.x] = STATES.SEARCHED
+                    n = n.parent
+                }
+                // mark node as visited
+                visited.current.push(node.current)
+            }
+
+            // setup next node in queue
+            let str = ''
+            queue.current.forEach((n) => {
+                str = str + `${getEstimatedCost(n)} | `
+            })
+            console.log(str)
+
+            node.current = getMinHeapMinimum()
+            // mark current path to node; marks as found if current node is the goal
+            if (node.current) {
+                const state =
+                    node.current.x === goalPos.x && node.current.y === goalPos.y
+                        ? STATES.FOUND
+                        : STATES.PATH
+                cells.current[node.current.y][node.current.x] =
+                    state === STATES.FOUND
+                        ? STATES.FOUND
+                        : STATES.PATH_SEARCHING
+                let n = node.current.parent
+                while (n) {
+                    cells.current[n.y][n.x] = state
+                    n = n.parent
+                }
+                // re-mark start and goal positions
+                cells.current[startPos.y][startPos.x] = STATES.START
+                cells.current[goalPos.y][goalPos.x] = STATES.GOAL
+
+                // found path
+                if (
+                    node.current.x === goalPos.x &&
+                    node.current.y === goalPos.y
+                ) {
+                    setRunState(RUN_STATE.FINISHED)
+                    stopPathfinding()
+                    return
+                }
+
+                // find non-visited neighbors
+                if (isValidNeighbor(node.current.x + 1, node.current.y)) {
+                    minHeapInsert({
+                        x: node.current.x + 1,
+                        y: node.current.y,
+                        parent: node.current,
+                        cost: node.current.cost! + 1,
+                    })
+                    cells.current[node.current.y][node.current.x + 1] =
+                        STATES.QUEUED
+                }
+                if (isValidNeighbor(node.current.x, node.current.y + 1)) {
+                    minHeapInsert({
+                        x: node.current.x,
+                        y: node.current.y + 1,
+                        parent: node.current,
+                        cost: node.current.cost! + 1,
+                    })
+                    cells.current[node.current.y + 1][node.current.x] =
+                        STATES.QUEUED
+                }
+                if (isValidNeighbor(node.current.x - 1, node.current.y)) {
+                    minHeapInsert({
+                        x: node.current.x - 1,
+                        y: node.current.y,
+                        parent: node.current,
+                        cost: node.current.cost! + 1,
+                    })
+                    cells.current[node.current.y][node.current.x - 1] =
+                        STATES.QUEUED
+                }
+                if (isValidNeighbor(node.current.x, node.current.y - 1)) {
+                    minHeapInsert({
+                        x: node.current.x,
+                        y: node.current.y - 1,
+                        parent: node.current,
+                        cost: node.current.cost! + 1,
+                    })
+                    cells.current[node.current.y - 1][node.current.x] =
+                        STATES.QUEUED
+                }
+            }
+        } else {
+            // exhausted all paths
+            setRunState(RUN_STATE.FINISHED)
+            stopPathfinding()
+            return
+        }
+    }
 
     return (
         <>
@@ -388,6 +614,7 @@ export default function Pathfinder() {
                         setStateSelection={setStateSelection}
                         algorithmSelection={algorithmSelection}
                         setAlgorithmSelection={setAlgorithmSelection}
+                        resetGrid={resetGrid}
                         speed={speed}
                         setSpeed={setSpeed}
                         runState={runState}

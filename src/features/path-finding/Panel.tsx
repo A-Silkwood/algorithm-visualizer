@@ -17,6 +17,7 @@ type PanelProps = {
     setStateSelection: React.Dispatch<React.SetStateAction<string>>
     algorithmSelection: string | null
     setAlgorithmSelection: React.Dispatch<React.SetStateAction<string | null>>
+    resetGrid: () => void
     speed: string | null
     setSpeed: React.Dispatch<React.SetStateAction<string | null>>
     runState: string
@@ -31,6 +32,7 @@ export default function Panel({
     setStateSelection,
     algorithmSelection,
     setAlgorithmSelection,
+    resetGrid,
     speed,
     setSpeed,
     runState,
@@ -132,13 +134,15 @@ export default function Panel({
                             title="Algorithm"
                             placeholder="Select an algorithm"
                             options={[
-                                'Breadth-First Search',
                                 'Depth-First Search',
-                                "Dijkstra's Algorithm",
+                                'Breadth-First Search',
                                 'A* Search',
                             ]}
                             value={algorithmSelection}
-                            onChange={setAlgorithmSelection}
+                            onChange={(option) => {
+                                resetGrid()
+                                setAlgorithmSelection(option)
+                            }}
                             disabled={runState === RUN_STATE.STARTED}
                         />
                     </div>
