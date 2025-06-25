@@ -18,6 +18,7 @@ type PanelProps = {
     algorithmSelection: string | null
     setAlgorithmSelection: React.Dispatch<React.SetStateAction<string | null>>
     resetGrid: () => void
+    createMaze: () => void
     speed: string | null
     setSpeed: React.Dispatch<React.SetStateAction<string | null>>
     runState: string
@@ -33,6 +34,7 @@ export default function Panel({
     algorithmSelection,
     setAlgorithmSelection,
     resetGrid,
+    createMaze,
     speed,
     setSpeed,
     runState,
@@ -127,6 +129,7 @@ export default function Panel({
                             iconSize={32}
                             btnClass="border-4 border-blue-100 disabled:border-gray-300"
                             disabled={runState === RUN_STATE.STARTED}
+                            onClick={createMaze}
                         />
                     </div>
                     <div>

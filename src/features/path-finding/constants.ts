@@ -1,13 +1,13 @@
 export const STATES = {
     EMPTY: '#f0f0f0',
-    START: '#75f073',
-    GOAL: '#f0737f',
+    START: '#69ff66',
+    GOAL: '#ff6675',
     WALL: '#2f303b',
-    PATH: '#c7a2de',
-    PATH_SEARCHING: '#e85ff5',
-    SEARCHED: '#f7e7b5',
-    QUEUED: '#f7c3b5',
-    FOUND: '#73e8f0',
+    PATH: '#fabd4c',
+    PATH_SEARCHING: '#ffe957',
+    SEARCHED: '#64a0c9',
+    QUEUED: '#3563ec',
+    FOUND: '#68f3fd',
 }
 
 export const RUN_STATE = {

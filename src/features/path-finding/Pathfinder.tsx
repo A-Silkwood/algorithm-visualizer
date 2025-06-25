@@ -13,9 +13,9 @@ type Node = {
 export default function Pathfinder() {
     // Canvas Settings
     // width of grid
-    const width = 40
+    const width = 50
     // height of grid
-    const height = 40
+    const height = 50
     // size of each cells width and height
     const cellSize = 20
 
@@ -163,6 +163,183 @@ export default function Pathfinder() {
 
         // clear run state
         setRunState(RUN_STATE.NONE)
+    }
+
+    function randInt(max: number): number {
+        return Math.floor(Math.random() * max)
+    }
+
+    // creates a grid
+    function generateMaze() {
+        // reset grid state and set all cells to wall
+        setStartPos(null)
+        setGoalPos(null)
+        setPrevStartState(STATES.EMPTY)
+        setPrevGoalState(STATES.EMPTY)
+
+        // defines cell data
+        type Cell = {
+            x: number
+            y: number
+            n: boolean
+            e: boolean
+            s: boolean
+            w: boolean
+        }
+
+        // initalize variables
+        const checked: Array<Cell> = []
+        const next: Array<Cell> = []
+        let curr: Cell = {
+            x: randInt(width),
+            y: randInt(height),
+            n: true,
+            e: true,
+            s: true,
+            w: true,
+        }
+        // align grid on an odd grid size
+        if (curr.x % 2 === 1) {
+            curr.x -= 1
+            if (curr.x < 0) {
+                curr.x += 2
+            }
+        }
+        if (curr.y % 2 === 1) {
+            curr.y -= 1
+            if (curr.y < 0) {
+                curr.y += 2
+            }
+        }
+        checked.push(curr)
+
+        // checks if cell is valid coordinates and hasn't been checked
+        const isValidCell = (x: number, y: number): boolean => {
+            return (
+                x >= 0 &&
+                x < width &&
+                y >= 0 &&
+                y < height &&
+                !checked.some((n) => n.x === x && n.y === y) &&
+                !next.some((n) => n.x === x && n.y === y)
+            )
+        }
+
+        // checks if cell is valid coordinates and hasn't been checked
+        const isCheckedCell = (x: number, y: number): boolean => {
+            return (
+                x >= 0 &&
+                x < width &&
+                y >= 0 &&
+                y < height &&
+                checked.some((n) => n.x === x && n.y === y)
+            )
+        }
+
+        // adds all neighbors to next queue
+        const addNeighborsToNext = (cell: Cell) => {
+            if (isValidCell(cell.x + 2, cell.y)) {
+                next.push({
+                    x: cell.x + 2,
+                    y: cell.y,
+                    n: true,
+                    e: true,
+                    s: true,
+                    w: true,
+                })
+            }
+            if (isValidCell(cell.x, cell.y + 2)) {
+                next.push({
+                    x: cell.x,
+                    y: cell.y + 2,
+                    n: true,
+                    e: true,
+                    s: true,
+                    w: true,
+                })
+            }
+            if (isValidCell(cell.x - 2, cell.y)) {
+                next.push({
+                    x: cell.x - 2,
+                    y: cell.y,
+                    n: true,
+                    e: true,
+                    s: true,
+                    w: true,
+                })
+            }
+            if (isValidCell(cell.x, cell.y - 2)) {
+                next.push({
+                    x: cell.x,
+                    y: cell.y - 2,
+                    n: true,
+                    e: true,
+                    s: true,
+                    w: true,
+                })
+            }
+        }
+
+        // initial next cells
+        addNeighborsToNext(curr)
+
+        // main loop
+        while (next.length > 0) {
+            curr = next.splice(randInt(next.length), 1)[0]
+
+            // get already checked sides
+            const sides = []
+            if (isCheckedCell(curr.x, curr.y - 2)) {
+                sides.push('n')
+            }
+            if (isCheckedCell(curr.x + 2, curr.y)) {
+                sides.push('e')
+            }
+            if (isCheckedCell(curr.x, curr.y + 2)) {
+                sides.push('s')
+            }
+            if (isCheckedCell(curr.x - 2, curr.y)) {
+                sides.push('w')
+            }
+
+            // carve to random side
+            const side = sides.splice(randInt(sides.length), 1)[0]
+            if (side === 'n') {
+                curr.n = false
+            }
+            if (side === 'e') {
+                curr.e = false
+            }
+            if (side === 's') {
+                curr.s = false
+            }
+            if (side === 'w') {
+                curr.w = false
+            }
+
+            addNeighborsToNext(curr)
+            checked.push(curr)
+        }
+
+        // update cell states with maze
+        cells.current = Array.from({ length: height }, () =>
+            Array(width).fill(STATES.WALL)
+        )
+        checked.forEach((c) => {
+            cells.current[c.y][c.x] = STATES.EMPTY
+            if (!c.n && c.y - 1 >= 0) {
+                cells.current[c.y - 1][c.x] = STATES.EMPTY
+            }
+            if (!c.e && c.x + 1 < width) {
+                cells.current[c.y][c.x + 1] = STATES.EMPTY
+            }
+            if (!c.s && c.y + 1 < height) {
+                cells.current[c.y + 1][c.x] = STATES.EMPTY
+            }
+            if (!c.w && c.x - 1 >= 0) {
+                cells.current[c.y][c.x - 1] = STATES.EMPTY
+            }
+        })
     }
 
     // check if cell has not been visited or in queue, within bounds, and not a wall
@@ -519,12 +696,6 @@ export default function Pathfinder() {
             }
 
             // setup next node in queue
-            let str = ''
-            queue.current.forEach((n) => {
-                str = str + `${getEstimatedCost(n)} | `
-            })
-            console.log(str)
-
             node.current = getMinHeapMinimum()
             // mark current path to node; marks as found if current node is the goal
             if (node.current) {
@@ -615,6 +786,7 @@ export default function Pathfinder() {
                         algorithmSelection={algorithmSelection}
                         setAlgorithmSelection={setAlgorithmSelection}
                         resetGrid={resetGrid}
+                        createMaze={generateMaze}
                         speed={speed}
                         setSpeed={setSpeed}
                         runState={runState}
